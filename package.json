@@ -1,7 +1,7 @@
 {
   "name": "vocabit-mcp",
-  "version": "0.1.1",
-  "mcpName": "io.github.johnbilousov/vocabit-mcp",
+  "version": "0.1.2",
+  "mcpName": "io.github.JohnBilousov/vocabit-mcp",
   "description": "MCP server for Vocabit — let an AI assistant build flashcard sets inside a real language-learning app and read back how the learner actually did.",
   "license": "MIT",
   "author": "Ivan Bilousov",

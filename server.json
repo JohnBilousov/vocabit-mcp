@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.johnbilousov/vocabit-mcp",
+  "name": "io.github.JohnBilousov/vocabit-mcp",
   "title": "Vocabit",
   "description": "Create flashcard sets in the Vocabit app and read back how the learner actually did.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "websiteUrl": "https://github.com/JohnBilousov/vocabit-mcp",
   "repository": {
     "url": "https://github.com/JohnBilousov/vocabit-mcp",
@@ -14,7 +14,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "vocabit-mcp",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"
