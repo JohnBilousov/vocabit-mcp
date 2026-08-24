@@ -19,7 +19,7 @@ import {
   updateStudySetShape,
 } from "./schemas.js";
 
-export const VERSION = "0.1.0";
+export const VERSION = "0.1.1";
 
 export function createClient(config: Config): VocabitClient {
   return config.demo ? new DemoVocabitClient(config) : new HttpVocabitClient(config);

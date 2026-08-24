@@ -1,0 +1,47 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.johnbilousov/vocabit-mcp",
+  "title": "Vocabit",
+  "description": "Create flashcard sets in the Vocabit app and read back how the learner actually did.",
+  "version": "0.1.1",
+  "websiteUrl": "https://github.com/JohnBilousov/vocabit-mcp",
+  "repository": {
+    "url": "https://github.com/JohnBilousov/vocabit-mcp",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "vocabit-mcp",
+      "version": "0.1.1",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "VOCABIT_BASE_URL",
+          "description": "Base URL of your Vocabit backend. Omit to run in demo mode with in-memory fixtures.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "VOCABIT_AGENT_KEY",
+          "description": "Agent key sent as X-Agent-Key, issued by your Vocabit backend.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "VOCABIT_USER_ID",
+          "description": "Firebase UID of the learner. Optional; the backend has a default.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

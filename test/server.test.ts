@@ -1,9 +1,11 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
 import { loadConfig } from "../src/config.js";
-import { createServer } from "../src/server.js";
+import { VERSION, createServer } from "../src/server.js";
 
 async function connectDemoClient() {
   const config = loadConfig({ VOCABIT_DEMO: "1" } as NodeJS.ProcessEnv);
@@ -141,5 +143,24 @@ describe("vocabit-mcp over MCP", () => {
     expect(prompts.map((prompt) => prompt.name)).toContain("study-session");
     const prompt = await client.getPrompt({ name: "study-session", arguments: { topic: "Dativ" } });
     expect(JSON.stringify(prompt.messages)).toContain("get_set_results");
+  });
+});
+
+describe("release metadata", () => {
+  const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+  const registry = JSON.parse(readFileSync("server.json", "utf8"));
+
+  // The MCP Registry rejects a server.json that disagrees with the published
+  // package, so the mismatch is worth catching here rather than at publish time.
+  it("keeps package.json, server.json and the advertised version in step", () => {
+    expect(VERSION).toBe(pkg.version);
+    expect(registry.version).toBe(pkg.version);
+    expect(registry.packages[0].version).toBe(pkg.version);
+    expect(registry.packages[0].identifier).toBe(pkg.name);
+    expect(registry.name).toBe(pkg.mcpName);
+  });
+
+  it("stays inside the registry's description limit", () => {
+    expect(registry.description.length).toBeLessThanOrEqual(100);
   });
 });
