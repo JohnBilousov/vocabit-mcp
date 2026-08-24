@@ -155,7 +155,7 @@ to use it sparingly.
 git clone https://github.com/JohnBilousov/vocabit-mcp && cd vocabit-mcp
 npm install
 npm run build
-npm test          # tool surface + full loop over an in-memory MCP transport
+npm test          # tool surface + full loop, plus the HTTP client against a mocked fetch
 npm run inspect   # demo mode in the MCP Inspector
 ```
 
@@ -170,6 +170,10 @@ src/
     types.ts      wire types + VocabitClient contract
     http.ts       live backend
     mock.ts       in-memory backend for demo mode
+test/
+  server.test.ts       tool surface + full loop — over an in-memory MCP transport
+  client/
+    http.test.ts       query encoding, error-body parsing, timeouts — against a mocked fetch
 ```
 
 ## Roadmap
