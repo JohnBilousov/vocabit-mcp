@@ -126,6 +126,8 @@ export interface SetResults {
   weakCards: CardProgress[];
   untouchedCards: CardProgress[];
   dueCardIds: string[];
+  /** Demo mode only: set when the learner activity in this response was simulated, not real. */
+  demoNote?: string;
 }
 
 export interface UpdateSetInput {

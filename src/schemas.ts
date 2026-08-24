@@ -152,4 +152,32 @@ export const getResultsOutput = {
   demoNote: z.string().optional(),
 };
 
+export const getStudySetOutput = {
+  setId: z.string(),
+  title: z.string(),
+  description: z.string().nullable().optional(),
+  cardCount: z.number(),
+  cards: z.array(z.object({ id: z.string().optional(), term: z.string(), definition: z.string() })),
+  topic: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  deepLink: z.string(),
+};
+
+export const updateStudySetOutput = {
+  setId: z.string(),
+  cardCount: z.number(),
+  updated: z.array(z.string()).describe("Which fields changed, e.g. ['title', 'addCards']"),
+};
+
+export const notifyLearnerOutput = {
+  setId: z.string(),
+  notified: z.boolean(),
+  telegramId: z.number().optional(),
+};
+
+export const deleteStudySetOutput = {
+  setId: z.string(),
+  deleted: z.boolean(),
+};
+
 export type CardInput = z.infer<typeof cardSchema>;

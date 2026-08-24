@@ -144,6 +144,64 @@ describe("vocabit-mcp over MCP", () => {
     const prompt = await client.getPrompt({ name: "study-session", arguments: { topic: "Dativ" } });
     expect(JSON.stringify(prompt.messages)).toContain("get_set_results");
   });
+
+  // Regression: outputSchema was only ever added to whichever tool happened
+  // to need it at the time, so half the surface returned untyped results with
+  // no apparent reason for the split. Every tool declares one now.
+  it("declares an outputSchema on every tool", async () => {
+    const { client } = await connectDemoClient();
+    const { tools } = await client.listTools();
+    for (const tool of tools) {
+      expect(tool.outputSchema, `${tool.name} is missing an outputSchema`).toBeDefined();
+    }
+  });
+
+  it("returns a readable summary and typed structuredContent for a set's contents", async () => {
+    const { client } = await connectDemoClient();
+    const created = await client.callTool({
+      name: "create_study_set",
+      arguments: { title: "Kitchen vocabulary", cards: [{ term: "der Löffel", definition: "spoon" }] },
+    });
+    const setId = (created.structuredContent as { setId: string }).setId;
+
+    const result = await client.callTool({ name: "get_study_set", arguments: { setId } });
+    expect(result.isError).toBeFalsy();
+
+    // The old behaviour dumped the whole GetSetResult as raw JSON, unlike
+    // every other tool's formatted summary.
+    const text = result.content[0]!.text as string;
+    expect(text).toContain("Kitchen vocabulary");
+    expect(text).toContain("der Löffel");
+    expect(text.trimStart().startsWith("{")).toBe(false);
+
+    expect(result.structuredContent).toMatchObject({
+      setId,
+      title: "Kitchen vocabulary",
+      cardCount: 1,
+      cards: [{ term: "der Löffel", definition: "spoon" }],
+    });
+  });
+
+  it("returns typed structuredContent from update, notify and delete", async () => {
+    const { client } = await connectDemoClient();
+    const created = await client.callTool({
+      name: "create_study_set",
+      arguments: { title: "Temp set", cards: [{ term: "a", definition: "b" }] },
+    });
+    const setId = (created.structuredContent as { setId: string }).setId;
+
+    const updated = await client.callTool({
+      name: "update_study_set",
+      arguments: { setId, addCards: [{ term: "c", definition: "d" }] },
+    });
+    expect(updated.structuredContent).toMatchObject({ setId, cardCount: 2, updated: ["addCards"] });
+
+    const notified = await client.callTool({ name: "notify_learner", arguments: { setId } });
+    expect(notified.structuredContent).toMatchObject({ setId, notified: true });
+
+    const deleted = await client.callTool({ name: "delete_study_set", arguments: { setId } });
+    expect(deleted.structuredContent).toMatchObject({ setId, deleted: true });
+  });
 });
 
 describe("release metadata", () => {

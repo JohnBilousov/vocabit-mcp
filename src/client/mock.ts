@@ -405,7 +405,7 @@ export class DemoVocabitClient implements VocabitClient {
       ...(simulated
         ? { demoNote: "Demo mode: this learner activity was simulated, not recorded from a real app session." }
         : {}),
-    } as SetResults;
+    };
   }
 
   async updateSet(setId: string, input: UpdateSetInput): Promise<UpdateSetResult> {

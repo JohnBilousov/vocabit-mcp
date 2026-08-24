@@ -1,6 +1,7 @@
 import type {
   CardProgress,
   CreateSetResult,
+  GetSetResult,
   ListSetsResult,
   ProgressSummary,
   SetResults,
@@ -72,8 +73,37 @@ export function formatResults(results: SetResults): string {
 
   if (results.completed) lines.push("\nEvery card has been reviewed at least once.");
 
-  const demoNote = (results as SetResults & { demoNote?: string }).demoNote;
-  if (demoNote) lines.push(`\n${demoNote}`);
+  if (results.demoNote) lines.push(`\n${results.demoNote}`);
+
+  return lines.join("\n");
+}
+
+const CARDS_SHOWN = 20;
+
+/** The backend's own doc shape is loose (Record<string, unknown>), so every field is read defensively. */
+export function formatSet(result: GetSetResult): string {
+  const set = result.set;
+  const title = typeof set.title === "string" ? set.title : "(untitled)";
+  const rawCards = Array.isArray(set.cards) ? set.cards : [];
+  const cardCount = typeof set.cardCount === "number" ? set.cardCount : rawCards.length;
+
+  const lines = [`"${title}" — ${cardCount} card${cardCount === 1 ? "" : "s"}`];
+  if (typeof set.description === "string" && set.description) lines.push(set.description);
+  if (result.agentContext.topic) lines.push(`Topic: ${result.agentContext.topic}`);
+  if (result.agentContext.notes) lines.push(`Notes: ${result.agentContext.notes}`);
+  lines.push(`Open on the learner's device: ${result.deepLink}`);
+
+  if (rawCards.length > 0) {
+    lines.push("");
+    const shown = rawCards.slice(0, CARDS_SHOWN).map((card) => {
+      const c = card as { term?: unknown; definition?: unknown };
+      const term = typeof c.term === "string" ? c.term : "?";
+      const definition = typeof c.definition === "string" ? c.definition : "?";
+      return `  • ${term} — ${definition}`;
+    });
+    lines.push(...shown);
+    if (rawCards.length > CARDS_SHOWN) lines.push(`  … and ${rawCards.length - CARDS_SHOWN} more`);
+  }
 
   return lines.join("\n");
 }

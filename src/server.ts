@@ -6,16 +6,20 @@ import type { Config } from "./config.js";
 import { DemoVocabitClient } from "./client/mock.js";
 import { HttpVocabitClient } from "./client/http.js";
 import { VocabitApiError, type VocabitClient } from "./client/types.js";
-import { formatCreated, formatHealth, formatList, formatResults } from "./format.js";
+import { formatCreated, formatHealth, formatList, formatResults, formatSet } from "./format.js";
 import {
   createStudySetOutput,
   createStudySetShape,
+  deleteStudySetOutput,
   getResultsOutput,
   getResultsShape,
+  getStudySetOutput,
   listStudySetsOutput,
   listStudySetsShape,
+  notifyLearnerOutput,
   notifyShape,
   setIdShape,
+  updateStudySetOutput,
   updateStudySetShape,
 } from "./schemas.js";
 
@@ -150,12 +154,36 @@ export function createServer(config: Config, client: VocabitClient = createClien
       description:
         "Read the full contents of a set — every card, plus the topic and notes you attached when you created it.",
       inputSchema: setIdShape,
+      outputSchema: getStudySetOutput,
       annotations: { readOnlyHint: true, openWorldHint: true },
     },
     async ({ setId }) =>
       run(async () => {
         const result = await client.getSet(setId);
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        const set = result.set;
+        const cards = Array.isArray(set.cards) ? set.cards : [];
+        return {
+          content: [{ type: "text", text: formatSet(result) }],
+          structuredContent: {
+            // The backend's own doc has no guaranteed id field on every shape
+            // it can return; the input argument is always correct.
+            setId,
+            title: typeof set.title === "string" ? set.title : "",
+            description: typeof set.description === "string" ? set.description : null,
+            cardCount: typeof set.cardCount === "number" ? set.cardCount : cards.length,
+            cards: cards.map((card) => {
+              const c = card as { id?: unknown; term?: unknown; definition?: unknown };
+              return {
+                id: typeof c.id === "string" ? c.id : undefined,
+                term: typeof c.term === "string" ? c.term : "",
+                definition: typeof c.definition === "string" ? c.definition : "",
+              };
+            }),
+            topic: result.agentContext.topic,
+            notes: result.agentContext.notes,
+            deepLink: result.deepLink,
+          },
+        };
       }),
   );
 
@@ -199,6 +227,7 @@ export function createServer(config: Config, client: VocabitClient = createClien
       description:
         "Change a set in place: retitle it, retag it, or add cards. Pass addCards to append (the usual case after reviewing results) or cards to replace the list wholesale — never both. Replacing the cards resets what the learner has already studied.",
       inputSchema: updateStudySetShape,
+      outputSchema: updateStudySetOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
     },
     async ({ setId, ...patch }) =>
@@ -222,7 +251,7 @@ export function createServer(config: Config, client: VocabitClient = createClien
               text: `Updated ${result.setId}: ${result.updated.join(", ") || "nothing"}. Now ${result.cardCount} cards.`,
             },
           ],
-          structuredContent: result as unknown as Record<string, unknown>,
+          structuredContent: { setId: result.setId, cardCount: result.cardCount, updated: result.updated },
         };
       }),
   );
@@ -234,6 +263,7 @@ export function createServer(config: Config, client: VocabitClient = createClien
       description:
         "Send the learner a Telegram message that a set is waiting. Use sparingly — one ping per set, right after you create it.",
       inputSchema: notifyShape,
+      outputSchema: notifyLearnerOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
     },
     async ({ setId, text }) =>
@@ -241,6 +271,7 @@ export function createServer(config: Config, client: VocabitClient = createClien
         const result = await client.notify(setId, text, config.telegramId);
         return {
           content: [{ type: "text", text: result.notified ? `Pinged the learner about ${setId}.` : "Notification was not delivered." }],
+          structuredContent: { setId: result.setId, notified: result.notified, telegramId: result.telegramId },
         };
       }),
   );
@@ -252,12 +283,16 @@ export function createServer(config: Config, client: VocabitClient = createClien
       description:
         "Remove a set from the learner's app. Study history is kept on the backend, but the set disappears from their device. Ask before calling this.",
       inputSchema: setIdShape,
+      outputSchema: deleteStudySetOutput,
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
     },
     async ({ setId }) =>
       run(async () => {
         const result = await client.deleteSet(setId);
-        return { content: [{ type: "text", text: `Deleted ${result.setId} from the app.` }] };
+        return {
+          content: [{ type: "text", text: `Deleted ${result.setId} from the app.` }],
+          structuredContent: { setId: result.setId, deleted: result.deleted },
+        };
       }),
   );
 
