@@ -1,0 +1,181 @@
+# vocabit-mcp
+
+An MCP server for [Vocabit](https://apps.apple.com/app/id6758019550), a flashcard app.
+It lets an AI assistant **write a study set into a real app on a real phone, and then read
+back how the learner actually did with it**.
+
+Most MCP servers read from an API. This one closes a loop:
+
+```mermaid
+flowchart LR
+    A["Assistant<br/>teaches a topic"] --> B["create_study_set"]
+    B --> C["Set appears in the<br/>Vocabit app"]
+    C --> D["Learner works<br/>through it"]
+    D --> E["get_set_results"]
+    E -->|weak cards| A
+```
+
+The interesting tool is not `create_study_set` — anything can generate flashcards.
+It is `get_set_results`: which cards the learner marked *hard*, which they never reached,
+how many reviews each one took. The next set is built out of that, not out of a guess.
+
+## Try it in 30 seconds
+
+No backend, no account, no API key:
+
+```bash
+git clone https://github.com/JohnBilousov/vocabit-mcp && cd vocabit-mcp
+npm install && npm run build
+node dist/index.js --demo
+```
+
+> Not on npm yet. Once it is, this becomes `npx -y vocabit-mcp --demo`.
+
+Demo mode runs the same server against an in-memory Vocabit with two seeded sets.
+Create a set, ask for results, and a deterministic stand-in learner will have worked
+through it — flagged in the response as simulated, so it is never mistaken for real data.
+
+To poke at it with a UI:
+
+```bash
+npm run inspect
+```
+
+## Install
+
+<details open>
+<summary><b>Claude Code</b></summary>
+
+```bash
+claude mcp add vocabit -- node /absolute/path/to/vocabit-mcp/dist/index.js
+```
+
+</details>
+
+<details>
+<summary><b>Claude Desktop / any MCP client</b></summary>
+
+```json
+{
+  "mcpServers": {
+    "vocabit": {
+      "command": "node",
+      "args": ["/absolute/path/to/vocabit-mcp/dist/index.js"],
+      "env": {
+        "VOCABIT_BASE_URL": "https://your-vocabit-backend.example.com",
+        "VOCABIT_AGENT_KEY": "your-agent-key"
+      }
+    }
+  }
+}
+```
+
+Drop the `env` block to run in demo mode.
+
+</details>
+
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `vocabit_health` | Check the connection and which mode the server is in. |
+| `create_study_set` | Publish a set to the learner's app. Returns a deep link that opens it on the device. |
+| `list_study_sets` | Recent sets, newest first, each with a progress summary. |
+| `get_study_set` | Full contents of one set, plus the topic and notes the assistant attached. |
+| `get_set_results` | **The feedback half.** Per-card status, `weakCards`, `untouchedCards`, due cards. |
+| `update_study_set` | Retitle, retag, or append cards — typically the follow-up after reading results. |
+| `notify_learner` | Telegram ping that a set is waiting. |
+| `delete_study_set` | Remove a set from the app. Study history is kept. |
+
+Also exposed: the `vocabit://set/{setId}` **resource** (a set as JSON, listable) and a
+`study-session` **prompt** that walks the whole loop.
+
+### Card states
+
+Progress comes from the app's spaced-repetition engine, not from the assistant:
+
+| Status | Meaning |
+|---|---|
+| `new` | Never reviewed. |
+| `struggling` | Learner marked it *hard*. |
+| `learning` | Marked *good*. |
+| `mastered` | Marked *easy*. |
+
+A set reports `completed: true` once no card is left in `new`.
+
+## Live mode
+
+Point the server at a Vocabit backend that has the agent API enabled:
+
+```bash
+export VOCABIT_BASE_URL=https://your-vocabit-backend.example.com
+export VOCABIT_AGENT_KEY=...   # must match one of AGENT_API_KEYS on the backend
+node dist/index.js
+```
+
+| Variable | Purpose |
+|---|---|
+| `VOCABIT_BASE_URL` | Backend base URL. |
+| `VOCABIT_AGENT_KEY` | Sent as `X-Agent-Key`. |
+| `VOCABIT_USER_ID` | Firebase UID of the learner. Optional; the backend has a default. |
+| `VOCABIT_TERM_LANGUAGE` / `VOCABIT_DEFINITION_LANGUAGE` | Defaults for new sets, e.g. `de` / `en`. |
+| `VOCABIT_TELEGRAM_ID` | Recipient for `notify_learner`. |
+| `VOCABIT_TIMEOUT_MS` | Request timeout, default `20000`. |
+| `VOCABIT_DEMO` | `1` forces demo mode. |
+
+Set neither URL nor key and the server starts in demo mode. Set exactly one and it
+refuses to start — half a configuration is a mistake, not a hint.
+
+## Design notes
+
+**Demo mode is a first-class client, not a stub.** `HttpVocabitClient` and
+`DemoVocabitClient` implement the same `VocabitClient` interface, so no tool has a
+branch for "are we pretending?". A reviewer can run the server before they have
+credentials, and the test suite exercises the real tool surface over a real MCP
+transport rather than mocking the SDK.
+
+**Errors are recoverable, not fatal.** A failed call comes back as `isError` with the
+backend's own message plus a hint aimed at the model — `404` says "call
+`list_study_sets` to see which sets exist", `401` says "or run with `VOCABIT_DEMO=1`".
+Mutually exclusive arguments are rejected with an explanation instead of a guess.
+
+**Output schemas stay loose on the edges.** Identifying fields are required; everything
+else is optional, so a backend that grows a field does not turn a working tool into a
+validation error.
+
+**Annotations are honest.** `delete_study_set` is marked `destructiveHint`, the read
+tools `readOnlyHint`. `notify_learner` messages a real person, and its description says
+to use it sparingly.
+
+## Development
+
+```bash
+npm install
+npm run build
+npm test          # tool surface + full loop over an in-memory MCP transport
+npm run inspect   # demo mode in the MCP Inspector
+```
+
+```
+src/
+  index.ts        CLI entry, stdio transport
+  config.ts       env → Config, demo-mode resolution
+  server.ts       tool / resource / prompt registration
+  schemas.ts      zod input and output shapes
+  format.ts       human-readable summaries next to structuredContent
+  client/
+    types.ts      wire types + VocabitClient contract
+    http.ts       live backend
+    mock.ts       in-memory backend for demo mode
+```
+
+## Roadmap
+
+- [ ] Streamable HTTP transport alongside stdio
+- [ ] Multi-learner support without a backend default UID
+- [ ] Audio pronunciation cards
+- [ ] Publish to npm and the MCP registry
+
+## License
+
+MIT © Ivan Bilousov
