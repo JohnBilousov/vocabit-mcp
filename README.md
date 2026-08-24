@@ -1,5 +1,6 @@
 # vocabit-mcp
 
+[![CI](https://github.com/JohnBilousov/vocabit-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/JohnBilousov/vocabit-mcp/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/vocabit-mcp)](https://www.npmjs.com/package/vocabit-mcp)
 [![license](https://img.shields.io/npm/l/vocabit-mcp)](./LICENSE)
 
