@@ -42,6 +42,8 @@ npx @modelcontextprotocol/inspector npx -y vocabit-mcp --demo
 
 ## Install
 
+Listed in the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.JohnBilousov/vocabit-mcp`, so clients that read the registry can find it on their own.
+
 <details open>
 <summary><b>Claude Code</b></summary>
 
