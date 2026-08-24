@@ -44,7 +44,10 @@ describe("HttpVocabitClient — outgoing requests", () => {
     expect((getInit.headers as Record<string, string>)["Content-Type"]).toBeUndefined();
 
     fetchMock.mockResolvedValueOnce(jsonResponse(201, { setId: "s1" }));
-    await new HttpVocabitClient(config()).createSet({ title: "t", cards: [{ term: "a", definition: "b" }] });
+    await new HttpVocabitClient(config()).createSet({
+      title: "t",
+      cards: [{ term: "a", definition: "b" }],
+    });
 
     const [, postInit] = fetchMock.mock.calls[1]!;
     expect((postInit.headers as Record<string, string>)["Content-Type"]).toBe("application/json");
@@ -53,7 +56,11 @@ describe("HttpVocabitClient — outgoing requests", () => {
 
   it("encodes query parameters and omits undefined ones", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, { sets: [] }));
-    await new HttpVocabitClient(config()).listSets({ limit: 5, includeProgress: true, topic: undefined });
+    await new HttpVocabitClient(config()).listSets({
+      limit: 5,
+      includeProgress: true,
+      topic: undefined,
+    });
 
     const [url] = fetchMock.mock.calls[0]!;
     const parsed = new URL(String(url));
@@ -93,7 +100,9 @@ describe("HttpVocabitClient — error responses", () => {
   it("falls back to a bare status when the JSON body has no detail field", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(503, { success: false }));
 
-    const error = await new HttpVocabitClient(config()).getSet("x").catch((e) => e as VocabitApiError);
+    const error = await new HttpVocabitClient(config())
+      .getSet("x")
+      .catch((e) => e as VocabitApiError);
     expect(error.message).toBe("HTTP 503");
     expect(error.detail).toEqual({ success: false });
   });
@@ -118,7 +127,9 @@ describe("HttpVocabitClient — error responses", () => {
 
   it("attaches a hint the model can act on for a 401", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(401, { detail: "bad key" }));
-    const error = await new HttpVocabitClient(config()).getSet("x").catch((e) => e as VocabitApiError);
+    const error = await new HttpVocabitClient(config())
+      .getSet("x")
+      .catch((e) => e as VocabitApiError);
     expect(error.hint).toMatch(/VOCABIT_DEMO/);
   });
 });

@@ -49,12 +49,16 @@ export class HttpVocabitClient implements VocabitClient {
         signal: controller.signal,
       });
     } catch (error) {
-      const reason = error instanceof Error && error.name === "AbortError"
-        ? `timed out after ${this.config.timeoutMs}ms`
-        : error instanceof Error
-          ? error.message
-          : String(error);
-      throw new VocabitApiError(`Could not reach the Vocabit backend at ${this.config.baseUrl}: ${reason}`, 0);
+      const reason =
+        error instanceof Error && error.name === "AbortError"
+          ? `timed out after ${this.config.timeoutMs}ms`
+          : error instanceof Error
+            ? error.message
+            : String(error);
+      throw new VocabitApiError(
+        `Could not reach the Vocabit backend at ${this.config.baseUrl}: ${reason}`,
+        0,
+      );
     } finally {
       clearTimeout(timer);
     }
@@ -118,7 +122,9 @@ export class HttpVocabitClient implements VocabitClient {
   }
 
   updateSet(setId: string, input: UpdateSetInput): Promise<UpdateSetResult> {
-    return this.request<UpdateSetResult>("PATCH", `/sets/${encodeURIComponent(setId)}`, { body: input });
+    return this.request<UpdateSetResult>("PATCH", `/sets/${encodeURIComponent(setId)}`, {
+      body: input,
+    });
   }
 
   deleteSet(setId: string): Promise<DeleteSetResult> {

@@ -72,7 +72,9 @@ function hash(input: string): number {
 function toStoredCard(card: Card, index: number, seed: string): StoredCard {
   return {
     ...card,
-    id: card.id ?? hash(`${seed}:${card.term}:${index}`).toString(16).padStart(8, "0").repeat(2).slice(0, 20),
+    id:
+      card.id ??
+      hash(`${seed}:${card.term}:${index}`).toString(16).padStart(8, "0").repeat(2).slice(0, 20),
     status: "new",
     difficultyScore: 0,
     box: 0,
@@ -100,7 +102,8 @@ function simulateStudy(set: StoredSet, now: number): void {
     card.box = status === "struggling" ? 1 : status === "learning" ? 2 : 4;
     card.reviewCount = reviewCount;
     card.lastReviewed = lastReviewed;
-    card.nextReview = lastReviewed + (status === "struggling" ? 0.5 : status === "learning" ? 2 : 7) * DAY;
+    card.nextReview =
+      lastReviewed + (status === "struggling" ? 0.5 : status === "learning" ? 2 : 7) * DAY;
   });
   set.studied = true;
 }
@@ -131,8 +134,10 @@ function buildSummary(cards: StoredCard[], now: number): ProgressSummary {
     counts[card.status] += 1;
     totalReviews += card.reviewCount;
     if (card.lastReviewed !== null) {
-      firstActivity = firstActivity === null ? card.lastReviewed : Math.min(firstActivity, card.lastReviewed);
-      lastActivity = lastActivity === null ? card.lastReviewed : Math.max(lastActivity, card.lastReviewed);
+      firstActivity =
+        firstActivity === null ? card.lastReviewed : Math.min(firstActivity, card.lastReviewed);
+      lastActivity =
+        lastActivity === null ? card.lastReviewed : Math.max(lastActivity, card.lastReviewed);
     }
     if (card.nextReview !== null && card.nextReview <= now) dueNow += 1;
   }
@@ -197,9 +202,17 @@ const SEED_SETS: Array<{
     studied: false,
     ageDays: 0,
     cards: [
-      { term: "to be blocked on", definition: "залежати від чогось, що заважає рухатись далі", example: "I'm blocked on the API key." },
+      {
+        term: "to be blocked on",
+        definition: "залежати від чогось, що заважає рухатись далі",
+        example: "I'm blocked on the API key.",
+      },
       { term: "to pick something up", definition: "взяти задачу в роботу" },
-      { term: "a heads-up", definition: "попередження заздалегідь", example: "Just a heads-up: deploy is at 5." },
+      {
+        term: "a heads-up",
+        definition: "попередження заздалегідь",
+        example: "Just a heads-up: deploy is at 5.",
+      },
       { term: "to circle back", definition: "повернутись до теми пізніше" },
       { term: "low-hanging fruit", definition: "найпростіші задачі з швидким результатом" },
     ],
@@ -278,7 +291,10 @@ export class DemoVocabitClient implements VocabitClient {
 
   async createSet(input: CreateSetInput): Promise<CreateSetResult> {
     if (input.cards.length === 0 || input.cards.length > MAX_CARDS) {
-      throw new VocabitApiError(`A set needs between 1 and ${MAX_CARDS} cards (got ${input.cards.length})`, 400);
+      throw new VocabitApiError(
+        `A set needs between 1 and ${MAX_CARDS} cards (got ${input.cards.length})`,
+        400,
+      );
     }
     const now = this.now();
     const setId = this.nextId();
@@ -401,9 +417,14 @@ export class DemoVocabitClient implements VocabitClient {
       cards,
       weakCards: cards.filter((card) => card.status === "struggling"),
       untouchedCards: cards.filter((card) => card.status === "new"),
-      dueCardIds: cards.filter((card) => card.nextReview !== null && card.nextReview <= now).map((card) => card.cardId),
+      dueCardIds: cards
+        .filter((card) => card.nextReview !== null && card.nextReview <= now)
+        .map((card) => card.cardId),
       ...(simulated
-        ? { demoNote: "Demo mode: this learner activity was simulated, not recorded from a real app session." }
+        ? {
+            demoNote:
+              "Demo mode: this learner activity was simulated, not recorded from a real app session.",
+          }
         : {}),
     };
   }
@@ -411,18 +432,37 @@ export class DemoVocabitClient implements VocabitClient {
   async updateSet(setId: string, input: UpdateSetInput): Promise<UpdateSetResult> {
     const set = this.require(setId);
     if (input.cards && input.addCards) {
-      throw new VocabitApiError("Pass either cards (full replacement) or addCards (append), not both", 400);
+      throw new VocabitApiError(
+        "Pass either cards (full replacement) or addCards (append), not both",
+        400,
+      );
     }
 
     const updated: string[] = [];
-    if (input.title !== undefined) (set.title = input.title), updated.push("title");
-    if (input.description !== undefined) (set.description = input.description), updated.push("description");
-    if (input.visibility !== undefined) (set.visibility = input.visibility), updated.push("visibility");
-    if (input.topic !== undefined) (set.topic = input.topic), updated.push("topic");
-    if (input.notes !== undefined) (set.notes = input.notes), updated.push("notes");
+    if (input.title !== undefined) {
+      set.title = input.title;
+      updated.push("title");
+    }
+    if (input.description !== undefined) {
+      set.description = input.description;
+      updated.push("description");
+    }
+    if (input.visibility !== undefined) {
+      set.visibility = input.visibility;
+      updated.push("visibility");
+    }
+    if (input.topic !== undefined) {
+      set.topic = input.topic;
+      updated.push("topic");
+    }
+    if (input.notes !== undefined) {
+      set.notes = input.notes;
+      updated.push("notes");
+    }
 
     if (input.cards) {
-      if (input.cards.length > MAX_CARDS) throw new VocabitApiError(`A set holds at most ${MAX_CARDS} cards`, 400);
+      if (input.cards.length > MAX_CARDS)
+        throw new VocabitApiError(`A set holds at most ${MAX_CARDS} cards`, 400);
       set.cards = input.cards.map((card, index) => toStoredCard(card, index, setId));
       set.studied = false;
       updated.push("cards");
@@ -432,7 +472,9 @@ export class DemoVocabitClient implements VocabitClient {
         throw new VocabitApiError(`A set holds at most ${MAX_CARDS} cards`, 400);
       }
       const offset = set.cards.length;
-      set.cards.push(...input.addCards.map((card, index) => toStoredCard(card, offset + index, setId)));
+      set.cards.push(
+        ...input.addCards.map((card, index) => toStoredCard(card, offset + index, setId)),
+      );
       updated.push("addCards");
     }
 

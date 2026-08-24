@@ -156,8 +156,12 @@ git clone https://github.com/JohnBilousov/vocabit-mcp && cd vocabit-mcp
 npm install
 npm run build
 npm test          # tool surface + full loop, plus the HTTP client against a mocked fetch
+npm run lint      # eslint
+npm run format    # prettier --write
 npm run inspect   # demo mode in the MCP Inspector
 ```
+
+CI runs `typecheck`, `lint`, `format:check`, `test`, and `build` on every push and pull request.
 
 ```
 src/

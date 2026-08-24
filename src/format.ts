@@ -39,11 +39,16 @@ export function formatList(result: ListSetsResult): string {
     const head = `${set.title} (${set.setId}) — ${set.cardCount} cards${set.topic ? `, topic: ${set.topic}` : ""}`;
     return set.progress ? `${head}\n    ${summaryLine(set.progress)}` : head;
   });
-  return [`${result.count} set${result.count === 1 ? "" : "s"}:`, ...lines.map((line) => `  • ${line}`)].join("\n");
+  return [
+    `${result.count} set${result.count === 1 ? "" : "s"}:`,
+    ...lines.map((line) => `  • ${line}`),
+  ].join("\n");
 }
 
 function cardLine(card: CardProgress): string {
-  const reviews = card.reviewCount ? ` — ${card.reviewCount} review${card.reviewCount === 1 ? "" : "s"}` : "";
+  const reviews = card.reviewCount
+    ? ` — ${card.reviewCount} review${card.reviewCount === 1 ? "" : "s"}`
+    : "";
   return `  • ${card.term} — ${card.definition}${reviews}`;
 }
 
@@ -68,7 +73,12 @@ export function formatResults(results: SetResults): string {
 
   const untouched = results.untouchedCards ?? [];
   if (untouched.length > 0) {
-    lines.push(`\nNot reached yet: ${untouched.slice(0, 10).map((card) => card.term).join(", ")}`);
+    lines.push(
+      `\nNot reached yet: ${untouched
+        .slice(0, 10)
+        .map((card) => card.term)
+        .join(", ")}`,
+    );
   }
 
   if (results.completed) lines.push("\nEvery card has been reviewed at least once.");

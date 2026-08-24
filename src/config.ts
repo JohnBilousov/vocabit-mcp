@@ -41,7 +41,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       );
     }
     if (!/^https?:\/\//.test(baseUrl)) {
-      throw new ConfigError(`VOCABIT_BASE_URL must start with http:// or https:// (got "${baseUrl}").`);
+      throw new ConfigError(
+        `VOCABIT_BASE_URL must start with http:// or https:// (got "${baseUrl}").`,
+      );
     }
   }
 

@@ -22,8 +22,12 @@ describe("config", () => {
   });
 
   it("rejects half a configuration", () => {
-    expect(() => loadConfig({ VOCABIT_AGENT_KEY: "k" } as NodeJS.ProcessEnv)).toThrow(/VOCABIT_BASE_URL/);
-    expect(() => loadConfig({ VOCABIT_BASE_URL: "https://x.dev" } as NodeJS.ProcessEnv)).toThrow(/VOCABIT_AGENT_KEY/);
+    expect(() => loadConfig({ VOCABIT_AGENT_KEY: "k" } as NodeJS.ProcessEnv)).toThrow(
+      /VOCABIT_BASE_URL/,
+    );
+    expect(() => loadConfig({ VOCABIT_BASE_URL: "https://x.dev" } as NodeJS.ProcessEnv)).toThrow(
+      /VOCABIT_AGENT_KEY/,
+    );
   });
 
   it("rejects a base URL without a scheme", () => {
@@ -160,7 +164,10 @@ describe("vocabit-mcp over MCP", () => {
     const { client } = await connectDemoClient();
     const created = await client.callTool({
       name: "create_study_set",
-      arguments: { title: "Kitchen vocabulary", cards: [{ term: "der Löffel", definition: "spoon" }] },
+      arguments: {
+        title: "Kitchen vocabulary",
+        cards: [{ term: "der Löffel", definition: "spoon" }],
+      },
     });
     const setId = (created.structuredContent as { setId: string }).setId;
 

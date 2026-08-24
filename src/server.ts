@@ -38,7 +38,12 @@ function toErrorResult(error: unknown): CallToolResult {
   if (error instanceof VocabitApiError) {
     return {
       isError: true,
-      content: [{ type: "text", text: `Vocabit error (${error.status || "network"}): ${error.message}\n${error.hint}` }],
+      content: [
+        {
+          type: "text",
+          text: `Vocabit error (${error.status || "network"}): ${error.message}\n${error.hint}`,
+        },
+      ],
     };
   }
   const message = error instanceof Error ? error.message : String(error);
@@ -53,7 +58,10 @@ async function run(handler: () => Promise<CallToolResult>): Promise<CallToolResu
   }
 }
 
-export function createServer(config: Config, client: VocabitClient = createClient(config)): McpServer {
+export function createServer(
+  config: Config,
+  client: VocabitClient = createClient(config),
+): McpServer {
   const server = new McpServer(
     { name: "vocabit-mcp", version: VERSION },
     {
@@ -75,7 +83,11 @@ export function createServer(config: Config, client: VocabitClient = createClien
       title: "Check Vocabit connection",
       description:
         "Verify the server can reach Vocabit and report which mode it is in (live backend or in-memory demo). Call this first if anything else fails.",
-      outputSchema: { mode: z.string(), baseUrl: z.string().nullable(), defaultUserId: z.string().nullable() },
+      outputSchema: {
+        mode: z.string(),
+        baseUrl: z.string().nullable(),
+        defaultUserId: z.string().nullable(),
+      },
       annotations: { readOnlyHint: true, openWorldHint: true },
     },
     async () =>
@@ -100,7 +112,12 @@ export function createServer(config: Config, client: VocabitClient = createClien
         "Build a flashcard set and publish it to the learner's Vocabit app. Returns a deep link that opens the set on their device. Prefer one focused topic and 8-15 cards per set — long sets get abandoned. Use the notes field for what you want to check afterwards; the learner never sees it.",
       inputSchema: createStudySetShape,
       outputSchema: createStudySetOutput,
-      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
     },
     async (args) =>
       run(async () => {
@@ -228,7 +245,12 @@ export function createServer(config: Config, client: VocabitClient = createClien
         "Change a set in place: retitle it, retag it, or add cards. Pass addCards to append (the usual case after reviewing results) or cards to replace the list wholesale — never both. Replacing the cards resets what the learner has already studied.",
       inputSchema: updateStudySetShape,
       outputSchema: updateStudySetOutput,
-      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
     },
     async ({ setId, ...patch }) =>
       run(async () => {
@@ -251,7 +273,11 @@ export function createServer(config: Config, client: VocabitClient = createClien
               text: `Updated ${result.setId}: ${result.updated.join(", ") || "nothing"}. Now ${result.cardCount} cards.`,
             },
           ],
-          structuredContent: { setId: result.setId, cardCount: result.cardCount, updated: result.updated },
+          structuredContent: {
+            setId: result.setId,
+            cardCount: result.cardCount,
+            updated: result.updated,
+          },
         };
       }),
   );
@@ -264,14 +290,30 @@ export function createServer(config: Config, client: VocabitClient = createClien
         "Send the learner a Telegram message that a set is waiting. Use sparingly — one ping per set, right after you create it.",
       inputSchema: notifyShape,
       outputSchema: notifyLearnerOutput,
-      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
     },
     async ({ setId, text }) =>
       run(async () => {
         const result = await client.notify(setId, text, config.telegramId);
         return {
-          content: [{ type: "text", text: result.notified ? `Pinged the learner about ${setId}.` : "Notification was not delivered." }],
-          structuredContent: { setId: result.setId, notified: result.notified, telegramId: result.telegramId },
+          content: [
+            {
+              type: "text",
+              text: result.notified
+                ? `Pinged the learner about ${setId}.`
+                : "Notification was not delivered.",
+            },
+          ],
+          structuredContent: {
+            setId: result.setId,
+            notified: result.notified,
+            telegramId: result.telegramId,
+          },
         };
       }),
   );
@@ -284,7 +326,12 @@ export function createServer(config: Config, client: VocabitClient = createClien
         "Remove a set from the learner's app. Study history is kept on the backend, but the set disappears from their device. Ask before calling this.",
       inputSchema: setIdShape,
       outputSchema: deleteStudySetOutput,
-      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
     },
     async ({ setId }) =>
       run(async () => {
@@ -321,7 +368,13 @@ export function createServer(config: Config, client: VocabitClient = createClien
       if (!id) throw new Error(`Malformed resource URI: ${uri.href}`);
       const result = await client.getSet(id);
       return {
-        contents: [{ uri: uri.href, mimeType: "application/json", text: JSON.stringify(result.set, null, 2) }],
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(result.set, null, 2),
+          },
+        ],
       };
     },
   );
@@ -330,7 +383,8 @@ export function createServer(config: Config, client: VocabitClient = createClien
     "study-session",
     {
       title: "Run a study session",
-      description: "Teach a topic, publish it as a set, and follow up on the last set's weak cards.",
+      description:
+        "Teach a topic, publish it as a set, and follow up on the last set's weak cards.",
       argsSchema: {
         topic: z.string().describe("What to study, e.g. 'Dativ prepositions' or 'standup phrases'"),
         language: z.string().optional().describe("Language being learned, e.g. 'German'"),

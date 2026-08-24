@@ -5,7 +5,11 @@ export const MAX_CARDS = 300;
 export const cardSchema = z
   .object({
     term: z.string().min(1).max(500).describe("The word or phrase in the language being learned"),
-    definition: z.string().min(1).max(1000).describe("Translation or definition, in the learner's own language"),
+    definition: z
+      .string()
+      .min(1)
+      .max(1000)
+      .describe("Translation or definition, in the learner's own language"),
     example: z.string().max(1000).optional().describe("A short sentence showing the term in use"),
     imageUrl: z.string().max(1000).optional().describe("Optional illustration URL"),
   })
@@ -20,7 +24,9 @@ export const createStudySetShape = {
     .array(cardSchema)
     .min(1)
     .max(MAX_CARDS)
-    .describe(`The flashcards, 1-${MAX_CARDS}. Keep a set to one theme and around 8-15 cards for a single session`),
+    .describe(
+      `The flashcards, 1-${MAX_CARDS}. Keep a set to one theme and around 8-15 cards for a single session`,
+    ),
   description: z.string().max(2000).optional().describe("Short description shown under the title"),
   topic: z
     .string()
@@ -31,19 +37,40 @@ export const createStudySetShape = {
     .string()
     .max(4000)
     .optional()
-    .describe("Your own notes about what to check when reviewing results. Never shown to the learner"),
+    .describe(
+      "Your own notes about what to check when reviewing results. Never shown to the learner",
+    ),
   termLanguage: z.string().max(10).optional().describe("Language of the terms, e.g. 'de'"),
-  definitionLanguage: z.string().max(10).optional().describe("Language of the definitions, e.g. 'en'"),
+  definitionLanguage: z
+    .string()
+    .max(10)
+    .optional()
+    .describe("Language of the definitions, e.g. 'en'"),
   visibility: visibilitySchema.optional().describe("Defaults to private"),
-  userId: z.string().optional().describe("Firebase UID of the learner. Omit to use the server default"),
+  userId: z
+    .string()
+    .optional()
+    .describe("Firebase UID of the learner. Omit to use the server default"),
   notify: z.boolean().optional().describe("Ping the learner on Telegram that the set is ready"),
 };
 
 export const listStudySetsShape = {
-  limit: z.number().int().min(1).max(100).optional().describe("How many sets to return, newest first (default 20)"),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe("How many sets to return, newest first (default 20)"),
   topic: z.string().max(500).optional().describe("Only sets with this exact topic tag"),
-  includeProgress: z.boolean().optional().describe("Attach a progress summary to each set (default true)"),
-  userId: z.string().optional().describe("Firebase UID of the learner. Omit to use the server default"),
+  includeProgress: z
+    .boolean()
+    .optional()
+    .describe("Attach a progress summary to each set (default true)"),
+  userId: z
+    .string()
+    .optional()
+    .describe("Firebase UID of the learner. Omit to use the server default"),
 };
 
 export const setIdShape = {
@@ -52,7 +79,10 @@ export const setIdShape = {
 
 export const getResultsShape = {
   ...setIdShape,
-  userId: z.string().optional().describe("Read progress for a different learner than the set owner"),
+  userId: z
+    .string()
+    .optional()
+    .describe("Read progress for a different learner than the set owner"),
 };
 
 export const updateStudySetShape = {
@@ -76,7 +106,11 @@ export const updateStudySetShape = {
 
 export const notifyShape = {
   ...setIdShape,
-  text: z.string().max(2000).optional().describe("Custom message. Omit for the default 'your set is ready' ping"),
+  text: z
+    .string()
+    .max(2000)
+    .optional()
+    .describe("Custom message. Omit for the default 'your set is ready' ping"),
 };
 
 /**
