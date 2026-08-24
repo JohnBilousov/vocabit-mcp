@@ -1,5 +1,8 @@
 # vocabit-mcp
 
+[![npm](https://img.shields.io/npm/v/vocabit-mcp)](https://www.npmjs.com/package/vocabit-mcp)
+[![license](https://img.shields.io/npm/l/vocabit-mcp)](./LICENSE)
+
 An MCP server for [Vocabit](https://apps.apple.com/app/id6758019550), a flashcard app.
 It lets an AI assistant **write a study set into a real app on a real phone, and then read
 back how the learner actually did with it**.
@@ -24,12 +27,8 @@ how many reviews each one took. The next set is built out of that, not out of a 
 No backend, no account, no API key:
 
 ```bash
-git clone https://github.com/JohnBilousov/vocabit-mcp && cd vocabit-mcp
-npm install && npm run build
-node dist/index.js --demo
+npx -y vocabit-mcp --demo
 ```
-
-> Not on npm yet. Once it is, this becomes `npx -y vocabit-mcp --demo`.
 
 Demo mode runs the same server against an in-memory Vocabit with two seeded sets.
 Create a set, ask for results, and a deterministic stand-in learner will have worked
@@ -38,7 +37,7 @@ through it — flagged in the response as simulated, so it is never mistaken for
 To poke at it with a UI:
 
 ```bash
-npm run inspect
+npx @modelcontextprotocol/inspector npx -y vocabit-mcp --demo
 ```
 
 ## Install
@@ -47,7 +46,7 @@ npm run inspect
 <summary><b>Claude Code</b></summary>
 
 ```bash
-claude mcp add vocabit -- node /absolute/path/to/vocabit-mcp/dist/index.js
+claude mcp add vocabit -- npx -y vocabit-mcp
 ```
 
 </details>
@@ -59,8 +58,8 @@ claude mcp add vocabit -- node /absolute/path/to/vocabit-mcp/dist/index.js
 {
   "mcpServers": {
     "vocabit": {
-      "command": "node",
-      "args": ["/absolute/path/to/vocabit-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "vocabit-mcp"],
       "env": {
         "VOCABIT_BASE_URL": "https://your-vocabit-backend.example.com",
         "VOCABIT_AGENT_KEY": "your-agent-key"
@@ -110,7 +109,7 @@ Point the server at a Vocabit backend that has the agent API enabled:
 ```bash
 export VOCABIT_BASE_URL=https://your-vocabit-backend.example.com
 export VOCABIT_AGENT_KEY=...   # must match one of AGENT_API_KEYS on the backend
-node dist/index.js
+npx -y vocabit-mcp
 ```
 
 | Variable | Purpose |
@@ -150,6 +149,7 @@ to use it sparingly.
 ## Development
 
 ```bash
+git clone https://github.com/JohnBilousov/vocabit-mcp && cd vocabit-mcp
 npm install
 npm run build
 npm test          # tool surface + full loop over an in-memory MCP transport
@@ -174,7 +174,7 @@ src/
 - [ ] Streamable HTTP transport alongside stdio
 - [ ] Multi-learner support without a backend default UID
 - [ ] Audio pronunciation cards
-- [ ] Publish to npm and the MCP registry
+- [ ] Publish to the MCP registry
 
 ## License
 
